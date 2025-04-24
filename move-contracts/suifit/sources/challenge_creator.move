@@ -8,6 +8,7 @@ module suifit::challenge_creator {
 
     // Error codes
     const EUnauthorized: u64 = 0;
+    const EInvalidChallengeType: u64 = 1;
 
     /// Creator capability for managing challenges
     struct CreatorCap has key, store {
@@ -35,13 +36,7 @@ module suifit::challenge_creator {
     /// Create a challenge using creator capability 
     public entry fun create_challenge_with_cap(
         cap: &mut CreatorCap,
-        title: vector<u8>,
-        description: vector<u8>,
         challenge_type: u8,
-        duration: u64,
-        min_stake: u64,
-        max_stake: u64,
-        multiplier: u64,
         clock: &Clock,
         ctx: &mut tx_context::TxContext
     ) {
@@ -49,15 +44,12 @@ module suifit::challenge_creator {
         let sender = tx_context::sender(ctx);
         assert!(cap.creator == sender, EUnauthorized);
         
+        // Validate challenge type (1 = Step Showdown, 2 = Speed Streak)
+        assert!(challenge_type == 1 || challenge_type == 2, EInvalidChallengeType);
+        
         // Create and publish challenge
-        challenge::publish_challenge(
-            title,
-            description,
+        challenge::create_standard_challenge(
             challenge_type,
-            duration,
-            min_stake,
-            max_stake,
-            multiplier,
             clock,
             ctx
         );

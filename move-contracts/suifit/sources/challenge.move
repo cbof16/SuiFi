@@ -6,6 +6,8 @@ module suifit::challenge {
     use sui::sui::SUI;
     use sui::coin::{Self, Coin};
     use sui::clock::{Self, Clock};
+    use sui::event;
+    use sui::dynamic_field as df;
     use std::option::{Self, Option};
     use std::vector;
     use std::string::{Self, String};
@@ -17,16 +19,37 @@ module suifit::challenge {
     const ENotParticipant: u64 = 4;
     const EInvalidStake: u64 = 5;
     const EChallengeEnded: u64 = 6;
+    const EInvalidChallengeType: u64 = 7;
+    const EAlreadyInPool: u64 = 8;
+    const ENotEnoughPlayers: u64 = 9;
 
     // Challenge types
-    const CHALLENGE_TYPE_STEPS: u8 = 1;
-    const CHALLENGE_TYPE_SPEED: u8 = 2;
-    const CHALLENGE_TYPE_AVERAGE: u8 = 3;
+    const CHALLENGE_TYPE_STEP_SHOWDOWN: u8 = 1;
+    const CHALLENGE_TYPE_SPEED_STREAK: u8 = 2;
 
     // Status values
     const STATUS_ACTIVE: u8 = 0;
     const STATUS_COMPLETED: u8 = 1;
     const STATUS_CANCELLED: u8 = 2;
+
+    // Fixed stake amounts
+    const STAKE_AMOUNT_STEP_SHOWDOWN: u64 = 10000000; // 0.01 SUI
+    const STAKE_AMOUNT_SPEED_STREAK: u64 = 20000000; // 0.02 SUI
+
+    // Event structures
+    struct PlayerJoinedPool has copy, drop {
+        player: address,
+        challenge_type: u8,
+        stake_amount: u64,
+        timestamp: u64,
+    }
+
+    struct MatchCreated has copy, drop {
+        player1: address,
+        player2: address,
+        challenge_type: u8,
+        challenge_id: address,
+    }
 
     // Participant struct to track individual data
     struct Participant has store, drop, copy {
@@ -48,21 +71,28 @@ module suifit::challenge {
         participants: vector<Participant>,
         start_time: u64,
         end_time: u64,
-        min_stake: u64,
-        max_stake: u64,
+        stake_amount: u64,  // Fixed amount instead of min/max
         multiplier: u64,
         reward_pool: Balance<SUI>,
+    }
+
+    // Matching pool for pairing players
+    struct MatchingPool has key, store {
+        id: UID,
+        challenge_type: u8,
+        stake_amount: u64,
+        waiting_players: vector<address>,
+        timestamps: vector<u64>, // When players joined
     }
 
     // Creates a new challenge object
     fun create_challenge(
         creator: address,
-        title: vector<u8>,
-        description: vector<u8>,
+        title: String,
+        description: String,
         challenge_type: u8,
         duration: u64,
-        min_stake: u64,
-        max_stake: u64,
+        stake_amount: u64,
         multiplier: u64,
         start_time: u64,
         ctx: &mut TxContext
@@ -70,46 +100,189 @@ module suifit::challenge {
         Challenge {
             id: object::new(ctx),
             creator,
-            title: string::utf8(title),
-            description: string::utf8(description),
+            title,
+            description,
             challenge_type,
             status: STATUS_ACTIVE,
             participants: vector::empty(),
             start_time,
             end_time: start_time + duration,
-            min_stake,
-            max_stake,
+            stake_amount,
             multiplier,
             reward_pool: balance::zero<SUI>(),
         }
     }
 
-    // Create and publish a new challenge
-    public entry fun publish_challenge(
-        title: vector<u8>,
-        description: vector<u8>,
+    // Create and publish a standard challenge
+    public entry fun create_standard_challenge(
         challenge_type: u8,
-        duration: u64,
-        min_stake: u64,
-        max_stake: u64,
-        multiplier: u64,
         clock: &Clock,
         ctx: &mut TxContext
     ) {
+        // Validate challenge type
+        assert!(
+            challenge_type == CHALLENGE_TYPE_STEP_SHOWDOWN || 
+            challenge_type == CHALLENGE_TYPE_SPEED_STREAK,
+            EInvalidChallengeType
+        );
+        
+        // Set parameters based on challenge type
+        let (title, description, stake_amount, duration, multiplier) = if (challenge_type == CHALLENGE_TYPE_STEP_SHOWDOWN) {
+            (
+                string::utf8(b"Step Showdown"),
+                string::utf8(b"Most steps in 24h wins it all!"),
+                STAKE_AMOUNT_STEP_SHOWDOWN,
+                86400000, // 24 hours in ms
+                120 // 1.2x multiplier
+            )
+        } else {
+            (
+                string::utf8(b"Speed Streak"),
+                string::utf8(b"Maintain your daily step goal for 48h"),
+                STAKE_AMOUNT_SPEED_STREAK,
+                172800000, // 48 hours in ms
+                150 // 1.5x multiplier
+            )
+        };
+        
+        // Create and share challenge
         let challenge = create_challenge(
             tx_context::sender(ctx),
             title,
             description,
             challenge_type,
             duration,
-            min_stake,
-            max_stake,
+            stake_amount,
             multiplier,
             clock::timestamp_ms(clock),
             ctx
         );
-
+        
         transfer::share_object(challenge);
+    }
+
+    // Initialize matching pools for standard challenge types
+    public entry fun initialize_matching_pools(ctx: &mut TxContext) {
+        let step_showdown_pool = MatchingPool {
+            id: object::new(ctx),
+            challenge_type: CHALLENGE_TYPE_STEP_SHOWDOWN,
+            stake_amount: STAKE_AMOUNT_STEP_SHOWDOWN,
+            waiting_players: vector::empty(),
+            timestamps: vector::empty(),
+        };
+        
+        let speed_streak_pool = MatchingPool {
+            id: object::new(ctx),
+            challenge_type: CHALLENGE_TYPE_SPEED_STREAK,
+            stake_amount: STAKE_AMOUNT_SPEED_STREAK,
+            waiting_players: vector::empty(),
+            timestamps: vector::empty(),
+        };
+        
+        transfer::share_object(step_showdown_pool);
+        transfer::share_object(speed_streak_pool);
+    }
+
+    // Join a matching pool to find an opponent
+    public entry fun join_matching_pool(
+        pool: &mut MatchingPool,
+        clock: &Clock,
+        ctx: &mut TxContext
+    ) {
+        let player = tx_context::sender(ctx);
+        let current_time = clock::timestamp_ms(clock);
+        
+        // Check if player is already in the pool
+        let i = 0;
+        let len = vector::length(&pool.waiting_players);
+        let already_in_pool = false;
+        
+        while (i < len) {
+            if (*vector::borrow(&pool.waiting_players, i) == player) {
+                already_in_pool = true;
+                break;
+            };
+            i = i + 1;
+        };
+        
+        assert!(!already_in_pool, EAlreadyInPool);
+        
+        // Add player to waiting pool
+        vector::push_back(&mut pool.waiting_players, player);
+        vector::push_back(&mut pool.timestamps, current_time);
+        
+        // Emit event for frontend to track
+        event::emit(PlayerJoinedPool {
+            player,
+            challenge_type: pool.challenge_type,
+            stake_amount: pool.stake_amount,
+            timestamp: current_time,
+        });
+    }
+
+    // Create a match from the waiting pool
+    public entry fun create_match(
+        pool: &mut MatchingPool,
+        clock: &Clock,
+        ctx: &mut TxContext
+    ) {
+        // Need at least 2 players to match
+        assert!(vector::length(&pool.waiting_players) >= 2, ENotEnoughPlayers);
+        
+        // Get first two players (FIFO)
+        let player1 = vector::remove(&mut pool.waiting_players, 0);
+        let _timestamp1 = vector::remove(&mut pool.timestamps, 0);
+        
+        let player2 = vector::remove(&mut pool.waiting_players, 0);
+        let _timestamp2 = vector::remove(&mut pool.timestamps, 0);
+        
+        // Create appropriate challenge
+        let current_time = clock::timestamp_ms(clock);
+        let (title, description, stake_amount, duration, multiplier) = if (pool.challenge_type == CHALLENGE_TYPE_STEP_SHOWDOWN) {
+            (
+                string::utf8(b"Step Showdown"),
+                string::utf8(b"Most steps in 24h wins it all!"),
+                STAKE_AMOUNT_STEP_SHOWDOWN,
+                86400000, // 24 hours in ms
+                120 // 1.2x multiplier
+            )
+        } else {
+            (
+                string::utf8(b"Speed Streak"),
+                string::utf8(b"Maintain your daily step goal for 48h"),
+                STAKE_AMOUNT_SPEED_STREAK,
+                172800000, // 48 hours in ms
+                150 // 1.5x multiplier
+            )
+        };
+        
+        let challenge = create_challenge(
+            tx_context::sender(ctx),
+            title,
+            description,
+            pool.challenge_type,
+            duration,
+            stake_amount,
+            multiplier,
+            current_time,
+            ctx
+        );
+        
+        // Store matched players reference using dynamic fields
+        df::add(&mut challenge.id, b"player1", player1);
+        df::add(&mut challenge.id, b"player2", player2);
+        
+        // Share the challenge
+        let challenge_id = object::uid_to_address(&challenge.id);
+        transfer::share_object(challenge);
+        
+        // Emit event for frontend
+        event::emit(MatchCreated {
+            player1,
+            player2,
+            challenge_type: pool.challenge_type,
+            challenge_id,
+        });
     }
 
     // Join a challenge by staking SUI
@@ -121,20 +294,25 @@ module suifit::challenge {
     ) {
         let stake_amount = coin::value(&stake_coin);
         let current_time = clock::timestamp_ms(clock);
+        let player = tx_context::sender(ctx);
         
-        // Validate stake amount is within range
-        assert!(
-            stake_amount >= challenge.min_stake && stake_amount <= challenge.max_stake,
-            EInvalidStake
-        );
+        // Validate stake amount is exactly the required amount
+        assert!(stake_amount == challenge.stake_amount, EInvalidStake);
         
         // Verify challenge is still active
         assert!(challenge.status == STATUS_ACTIVE, EChallengeEnded);
         assert!(current_time < challenge.end_time, EChallengeEnded);
         
+        // Verify player is part of the match (if this is a matched challenge)
+        if (df::exists_(&challenge.id, b"player1") && df::exists_(&challenge.id, b"player2")) {
+            let player1 = *df::borrow<vector<u8>, address>(&challenge.id, b"player1");
+            let player2 = *df::borrow<vector<u8>, address>(&challenge.id, b"player2");
+            assert!(player == player1 || player == player2, ENotParticipant);
+        };
+        
         // Add participant to the challenge
         let participant = Participant {
-            user: tx_context::sender(ctx),
+            user: player,
             stake: stake_amount,
             steps: 0,
             avg_speed: 0,
@@ -180,51 +358,71 @@ module suifit::challenge {
         assert!(found, ENotParticipant);
     }
 
-    // Helper function to determine the winner based on challenge type
-    fun get_winner(challenge: &Challenge): Option<address> {
-        let i = 0;
+    // Helper function to get winner and runner-up
+    fun get_top_performers(challenge: &Challenge): (Option<address>, Option<address>) {
         let participant_count = vector::length(&challenge.participants);
         
         // Ensure there are participants
         if (participant_count == 0) {
-            return option::none()
+            return (option::none(), option::none())
         };
         
-        let max_value = 0;
-        let winner_idx = 0;
+        // For a single participant, they're the winner with no runner-up
+        if (participant_count == 1) {
+            let participant = vector::borrow(&challenge.participants, 0);
+            return (option::some(participant.user), option::none())
+        };
+        
+        // Initialize with first participant
+        let best_value = 0;
+        let second_best = 0;
+        let best_idx = 0;
+        let second_idx = 0;
+        let i = 0;
 
+        // First pass to find the best
         while (i < participant_count) {
             let participant = vector::borrow(&challenge.participants, i);
             
-            // Depending on the challenge type, determine the winner
-            let value_to_compare = if (challenge.challenge_type == CHALLENGE_TYPE_STEPS) {
+            // Calculate value based on challenge type
+            let value_to_compare = if (challenge.challenge_type == CHALLENGE_TYPE_STEP_SHOWDOWN) {
                 participant.steps
-            } else if (challenge.challenge_type == CHALLENGE_TYPE_SPEED) {
-                participant.avg_speed
-            } else if (challenge.challenge_type == CHALLENGE_TYPE_AVERAGE) {
-                // For average challenge, use a simple average calculation
-                if (participant.steps > 0 && participant.avg_speed > 0) {
-                    (participant.steps + participant.avg_speed) / 2
-                } else {
-                    0
-                }
             } else {
-                0 // Default case, shouldn't happen
+                // For Speed Streak, consider both steps and avg_speed
+                participant.steps + participant.avg_speed
             };
 
-            if (value_to_compare > max_value) {
-                max_value = value_to_compare;
-                winner_idx = i;
+            if (value_to_compare > best_value) {
+                // Current best becomes second
+                second_best = best_value;
+                second_idx = best_idx;
+                
+                // New best
+                best_value = value_to_compare;
+                best_idx = i;
+            } else if (value_to_compare > second_best) {
+                // New second best
+                second_best = value_to_compare;
+                second_idx = i;
             };
             
             i = i + 1;
         };
 
         // If no one has made progress, return none
-        if (max_value == 0) {
-            option::none()
+        if (best_value == 0) {
+            return (option::none(), option::none())
+        };
+        
+        // Convert to addresses
+        let winner = vector::borrow(&challenge.participants, best_idx).user;
+        
+        // Only return runner-up if they have a non-zero value
+        if (second_best > 0) {
+            let runner_up = vector::borrow(&challenge.participants, second_idx).user;
+            (option::some(winner), option::some(runner_up))
         } else {
-            option::some(vector::borrow(&challenge.participants, winner_idx).user)
+            (option::some(winner), option::none())
         }
     }
 
@@ -249,17 +447,35 @@ module suifit::challenge {
             // Ensure there are participants
             assert!(participant_count > 0, ENoParticipants);
             
-            let winner_opt = get_winner(challenge);
+            // Get top performers
+            let (winner_opt, runner_up_opt) = get_top_performers(challenge);
+            
+            // Calculate total reward
+            let total_reward = balance::value(&challenge.reward_pool);
             
             if (option::is_some(&winner_opt)) {
                 let winner = option::extract(&mut winner_opt);
                 
-                // Calculate rewards based on total reward pool
-                let reward_amount = balance::value(&challenge.reward_pool);
-                let reward_coin = coin::from_balance(balance::split(&mut challenge.reward_pool, reward_amount), ctx);
+                // Winner gets 80% of pool
+                let winner_share = (total_reward * 80) / 100;
+                let winner_coin = coin::from_balance(
+                    balance::split(&mut challenge.reward_pool, winner_share), 
+                    ctx
+                );
+                transfer::public_transfer(winner_coin, winner);
                 
-                // Transfer rewards to winner
-                transfer::public_transfer(reward_coin, winner);
+                // Runner-up gets 15% if they exist
+                if (option::is_some(&runner_up_opt)) {
+                    let runner_up = option::extract(&mut runner_up_opt);
+                    let runner_up_share = (total_reward * 15) / 100;
+                    let runner_up_coin = coin::from_balance(
+                        balance::split(&mut challenge.reward_pool, runner_up_share),
+                        ctx
+                    );
+                    transfer::public_transfer(runner_up_coin, runner_up);
+                };
+                
+                // Remaining 5% stays in contract (platform fee)
             };
         };
     }
@@ -297,15 +513,14 @@ module suifit::challenge {
     // --- View functions ---
 
     /// Get challenge details
-    public fun get_challenge_details(challenge: &Challenge): (String, String, u8, u64, u64, u64, u64, u64, u8, u64) {
+    public fun get_challenge_details(challenge: &Challenge): (String, String, u8, u64, u64, u64, u64, u8, u64) {
         (
             challenge.title,
             challenge.description,
             challenge.challenge_type,
             challenge.start_time,
             challenge.end_time,
-            challenge.min_stake,
-            challenge.max_stake,
+            challenge.stake_amount,
             challenge.multiplier,
             challenge.status,
             vector::length(&challenge.participants)
@@ -347,5 +562,10 @@ module suifit::challenge {
     /// Get total reward pool amount
     public fun get_reward_pool(challenge: &Challenge): u64 {
         balance::value(&challenge.reward_pool)
+    }
+    
+    /// Get waiting players count in a matching pool
+    public fun get_waiting_players_count(pool: &MatchingPool): u64 {
+        vector::length(&pool.waiting_players)
     }
 } 
