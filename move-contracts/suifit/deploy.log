@@ -1,0 +1,209 @@
+Building the SuiFit contract...
+[note] Dependencies on Bridge, MoveStdlib, Sui, and SuiSystem are automatically added, but this feature is disabled for your package because you have explicitly included dependencies on Sui. Consider removing these dependencies from Move.toml.
+UPDATING GIT DEPENDENCY https://github.com/MystenLabs/sui.git
+From https://github.com/MystenLabs/sui
+ + b70da55174...e69a318fb7 gh-pages                  -> origin/gh-pages  (forced update)
+   cb5d7822d4..8099bfdcd8  main                      -> origin/main
+   03ea1b6d70..2877c9ee26  mlogan-merge              -> origin/mlogan-merge
+ * [new branch]            nickv-parallelize-handlers-2 -> origin/nickv-parallelize-handlers-2
+ * [new branch]            revert-fn-delegation      -> origin/revert-fn-delegation
+ + 4ada73975a...73dd4cd83b tmw/commit-proc           -> origin/tmw/commit-proc  (forced update)
+ * [new branch]            tmw/sync                  -> origin/tmw/sync
+ + 97f8486479...c04cae98e7 tzakian/summary-generation-sui -> origin/tzakian/summary-generation-sui  (forced update)
+ + d23828fea2...7777437f1e xun/mysticeti-fp-wait-for-effects -> origin/xun/mysticeti-fp-wait-for-effects  (forced update)
+ * [new tag]               sui_v1.49.0_1745598032_ci -> sui_v1.49.0_1745598032_ci
+INCLUDING DEPENDENCY Sui
+INCLUDING DEPENDENCY MoveStdlib
+BUILDING suifit
+[0m[1m[38;5;11mwarning[W09004][0m[1m: unnecessary trailing semicolon[0m
+    [0m[34m┌─[0m ./sources/challenge.move:203:22
+    [0m[34m│[0m
+[0m[34m203[0m [0m[34m│[0m                 break[0m[33m;[0m
+    [0m[34m│[0m                 [0m[34m-----[0m[33m^[0m
+    [0m[34m│[0m                 [0m[34m│[0m    [0m[33m│[0m
+    [0m[34m│[0m                 [0m[34m│[0m    [0m[33mInvalid trailing ';'[0m
+    [0m[34m│[0m                 [0m[34m│[0m    [0m[34mA trailing ';' in an expression block implicitly adds a '()' value after the semicolon. That '()' value will not be reachable[0m
+    [0m[34m│[0m                 [0m[34mAny code after this expression will not be reached[0m
+    [0m[34m│[0m
+    [0m[34m=[0m This warning can be suppressed with '#[allow(unused_trailing_semi)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+[0m[1m[38;5;11mwarning[W09004][0m[1m: unnecessary trailing semicolon[0m
+    [0m[34m┌─[0m ./sources/challenge.move:353:22
+    [0m[34m│[0m
+[0m[34m353[0m [0m[34m│[0m                 break[0m[33m;[0m
+    [0m[34m│[0m                 [0m[34m-----[0m[33m^[0m
+    [0m[34m│[0m                 [0m[34m│[0m    [0m[33m│[0m
+    [0m[34m│[0m                 [0m[34m│[0m    [0m[33mInvalid trailing ';'[0m
+    [0m[34m│[0m                 [0m[34m│[0m    [0m[34mA trailing ';' in an expression block implicitly adds a '()' value after the semicolon. That '()' value will not be reachable[0m
+    [0m[34m│[0m                 [0m[34mAny code after this expression will not be reached[0m
+    [0m[34m│[0m
+    [0m[34m=[0m This warning can be suppressed with '#[allow(unused_trailing_semi)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+Publishing the SuiFit contract...
+[warning] Client/Server api version mismatch, client api version : 1.48.0, server api version : 1.47.0
+[Note]: Dependency sources are no longer verified automatically during publication and upgrade. You can pass the `--verify-deps` option if you would like to verify them as part of publication or upgrade.
+[note] Dependencies on Bridge, MoveStdlib, Sui, and SuiSystem are automatically added, but this feature is disabled for your package because you have explicitly included dependencies on Sui. Consider removing these dependencies from Move.toml.
+UPDATING GIT DEPENDENCY https://github.com/MystenLabs/sui.git
+INCLUDING DEPENDENCY Sui
+INCLUDING DEPENDENCY MoveStdlib
+BUILDING suifit
+[0m[1m[38;5;11mwarning[W09004][0m[1m: unnecessary trailing semicolon[0m
+    [0m[34m┌─[0m /home/cbof/suifit/move-contracts/suifit/sources/challenge.move:203:22
+    [0m[34m│[0m
+[0m[34m203[0m [0m[34m│[0m                 break[0m[33m;[0m
+    [0m[34m│[0m                 [0m[34m-----[0m[33m^[0m
+    [0m[34m│[0m                 [0m[34m│[0m    [0m[33m│[0m
+    [0m[34m│[0m                 [0m[34m│[0m    [0m[33mInvalid trailing ';'[0m
+    [0m[34m│[0m                 [0m[34m│[0m    [0m[34mA trailing ';' in an expression block implicitly adds a '()' value after the semicolon. That '()' value will not be reachable[0m
+    [0m[34m│[0m                 [0m[34mAny code after this expression will not be reached[0m
+    [0m[34m│[0m
+    [0m[34m=[0m This warning can be suppressed with '#[allow(unused_trailing_semi)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+[0m[1m[38;5;11mwarning[W09004][0m[1m: unnecessary trailing semicolon[0m
+    [0m[34m┌─[0m /home/cbof/suifit/move-contracts/suifit/sources/challenge.move:353:22
+    [0m[34m│[0m
+[0m[34m353[0m [0m[34m│[0m                 break[0m[33m;[0m
+    [0m[34m│[0m                 [0m[34m-----[0m[33m^[0m
+    [0m[34m│[0m                 [0m[34m│[0m    [0m[33m│[0m
+    [0m[34m│[0m                 [0m[34m│[0m    [0m[33mInvalid trailing ';'[0m
+    [0m[34m│[0m                 [0m[34m│[0m    [0m[34mA trailing ';' in an expression block implicitly adds a '()' value after the semicolon. That '()' value will not be reachable[0m
+    [0m[34m│[0m                 [0m[34mAny code after this expression will not be reached[0m
+    [0m[34m│[0m
+    [0m[34m=[0m This warning can be suppressed with '#[allow(unused_trailing_semi)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+Skipping dependency verification
+Transaction Digest: 6hhANZaWh8eU3TtLeHpTCuHKk9sNZEyiirW65xkBVnUc
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Transaction Data                                                                                             │
+├──────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Sender: 0xaf90801bb6606e52c7b2f664342c11b68b812ed1a01b5e742500cb28ed103b36                                   │
+│ Gas Owner: 0xaf90801bb6606e52c7b2f664342c11b68b812ed1a01b5e742500cb28ed103b36                                │
+│ Gas Budget: 100000000 MIST                                                                                   │
+│ Gas Price: 1000 MIST                                                                                         │
+│ Gas Payment:                                                                                                 │
+│  ┌──                                                                                                         │
+│  │ ID: 0x073793ca617f73bbec57d8d38798bf91025125091188b89467e9c008295a9e48                                    │
+│  │ Version: 401469955                                                                                        │
+│  │ Digest: Azmtihe7Lrg7Tt8TH8y6F4spMrGdwxuZWr2SVMMvZCeA                                                      │
+│  └──                                                                                                         │
+│                                                                                                              │
+│ Transaction Kind: Programmable                                                                               │
+│ ╭──────────────────────────────────────────────────────────────────────────────────────────────────────────╮ │
+│ │ Input Objects                                                                                            │ │
+│ ├──────────────────────────────────────────────────────────────────────────────────────────────────────────┤ │
+│ │ 0   Pure Arg: Type: address, Value: "0xaf90801bb6606e52c7b2f664342c11b68b812ed1a01b5e742500cb28ed103b36" │ │
+│ ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────╯ │
+│ ╭─────────────────────────────────────────────────────────────────────────╮                                  │
+│ │ Commands                                                                │                                  │
+│ ├─────────────────────────────────────────────────────────────────────────┤                                  │
+│ │ 0  Publish:                                                             │                                  │
+│ │  ┌                                                                      │                                  │
+│ │  │ Dependencies:                                                        │                                  │
+│ │  │   0x0000000000000000000000000000000000000000000000000000000000000001 │                                  │
+│ │  │   0x0000000000000000000000000000000000000000000000000000000000000002 │                                  │
+│ │  └                                                                      │                                  │
+│ │                                                                         │                                  │
+│ │ 1  TransferObjects:                                                     │                                  │
+│ │  ┌                                                                      │                                  │
+│ │  │ Arguments:                                                           │                                  │
+│ │  │   Result 0                                                           │                                  │
+│ │  │ Address: Input  0                                                    │                                  │
+│ │  └                                                                      │                                  │
+│ ╰─────────────────────────────────────────────────────────────────────────╯                                  │
+│                                                                                                              │
+│ Signatures:                                                                                                  │
+│    A+43REBpXh9L8ZdqNYd//GlGHEZO2R8B0IF1jpKA1BHYlF167T0/Z++YSosRE3rIiWcR7VY9RyaM/9RsY0vQDA==                  │
+│                                                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭───────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Transaction Effects                                                                               │
+├───────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Digest: 6hhANZaWh8eU3TtLeHpTCuHKk9sNZEyiirW65xkBVnUc                                              │
+│ Status: Success                                                                                   │
+│ Executed Epoch: 715                                                                               │
+│                                                                                                   │
+│ Created Objects:                                                                                  │
+│  ┌──                                                                                              │
+│  │ ID: 0x4cebe66bb01d5d2bb0f9fe61aa0b9aafbffe960e8c5622299cc5373c1ba1db06                         │
+│  │ Owner: Account Address ( 0xaf90801bb6606e52c7b2f664342c11b68b812ed1a01b5e742500cb28ed103b36 )  │
+│  │ Version: 401469956                                                                             │
+│  │ Digest: ChJFLtx3ncwwnw1YwodjCmyp3FXb5AS4mqnXmbHbU1UH                                           │
+│  └──                                                                                              │
+│  ┌──                                                                                              │
+│  │ ID: 0x9c7abebc3f0697769a6799109cb855b478e1dc5b85413fe4aa60a007c6a7405b                         │
+│  │ Owner: Immutable                                                                               │
+│  │ Version: 1                                                                                     │
+│  │ Digest: 71MCDpJfDpWJT76SnFeLzaeZ2uDoVfiiBGakRwVVzoGK                                           │
+│  └──                                                                                              │
+│ Mutated Objects:                                                                                  │
+│  ┌──                                                                                              │
+│  │ ID: 0x073793ca617f73bbec57d8d38798bf91025125091188b89467e9c008295a9e48                         │
+│  │ Owner: Account Address ( 0xaf90801bb6606e52c7b2f664342c11b68b812ed1a01b5e742500cb28ed103b36 )  │
+│  │ Version: 401469956                                                                             │
+│  │ Digest: 5zvdaj7TdYYcJokyMhQCuSUapx8Sq1p3G2cdeESwAzLs                                           │
+│  └──                                                                                              │
+│ Gas Object:                                                                                       │
+│  ┌──                                                                                              │
+│  │ ID: 0x073793ca617f73bbec57d8d38798bf91025125091188b89467e9c008295a9e48                         │
+│  │ Owner: Account Address ( 0xaf90801bb6606e52c7b2f664342c11b68b812ed1a01b5e742500cb28ed103b36 )  │
+│  │ Version: 401469956                                                                             │
+│  │ Digest: 5zvdaj7TdYYcJokyMhQCuSUapx8Sq1p3G2cdeESwAzLs                                           │
+│  └──                                                                                              │
+│ Gas Cost Summary:                                                                                 │
+│    Storage Cost: 45182000 MIST                                                                    │
+│    Computation Cost: 1000000 MIST                                                                 │
+│    Storage Rebate: 978120 MIST                                                                    │
+│    Non-refundable Storage Fee: 9880 MIST                                                          │
+│                                                                                                   │
+│ Transaction Dependencies:                                                                         │
+│    2KKFDYfXCwBWaS1e3i4gLnjW1DsQoWqYQMb4SVBZFQR2                                                   │
+│    Ai5zNadGt6ud5ypScPf1wgiwphByKVdawmsco5LiumuL                                                   │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─────────────────────────────╮
+│ No transaction block events │
+╰─────────────────────────────╯
+
+╭──────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Object Changes                                                                                   │
+├──────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Created Objects:                                                                                 │
+│  ┌──                                                                                             │
+│  │ ObjectID: 0x4cebe66bb01d5d2bb0f9fe61aa0b9aafbffe960e8c5622299cc5373c1ba1db06                  │
+│  │ Sender: 0xaf90801bb6606e52c7b2f664342c11b68b812ed1a01b5e742500cb28ed103b36                    │
+│  │ Owner: Account Address ( 0xaf90801bb6606e52c7b2f664342c11b68b812ed1a01b5e742500cb28ed103b36 ) │
+│  │ ObjectType: 0x2::package::UpgradeCap                                                          │
+│  │ Version: 401469956                                                                            │
+│  │ Digest: ChJFLtx3ncwwnw1YwodjCmyp3FXb5AS4mqnXmbHbU1UH                                          │
+│  └──                                                                                             │
+│ Mutated Objects:                                                                                 │
+│  ┌──                                                                                             │
+│  │ ObjectID: 0x073793ca617f73bbec57d8d38798bf91025125091188b89467e9c008295a9e48                  │
+│  │ Sender: 0xaf90801bb6606e52c7b2f664342c11b68b812ed1a01b5e742500cb28ed103b36                    │
+│  │ Owner: Account Address ( 0xaf90801bb6606e52c7b2f664342c11b68b812ed1a01b5e742500cb28ed103b36 ) │
+│  │ ObjectType: 0x2::coin::Coin<0x2::sui::SUI>                                                    │
+│  │ Version: 401469956                                                                            │
+│  │ Digest: 5zvdaj7TdYYcJokyMhQCuSUapx8Sq1p3G2cdeESwAzLs                                          │
+│  └──                                                                                             │
+│ Published Objects:                                                                               │
+│  ┌──                                                                                             │
+│  │ PackageID: 0x9c7abebc3f0697769a6799109cb855b478e1dc5b85413fe4aa60a007c6a7405b                 │
+│  │ Version: 1                                                                                    │
+│  │ Digest: 71MCDpJfDpWJT76SnFeLzaeZ2uDoVfiiBGakRwVVzoGK                                          │
+│  │ Modules: challenge, challenge_creator                                                         │
+│  └──                                                                                             │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭───────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Balance Changes                                                                                   │
+├───────────────────────────────────────────────────────────────────────────────────────────────────┤
+│  ┌──                                                                                              │
+│  │ Owner: Account Address ( 0xaf90801bb6606e52c7b2f664342c11b68b812ed1a01b5e742500cb28ed103b36 )  │
+│  │ CoinType: 0x2::sui::SUI                                                                        │
+│  │ Amount: -45203880                                                                              │
+│  └──                                                                                              │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────╯
+Package ID: 
+[warning] Client/Server api version mismatch, client api version : 1.48.0, server api version : 1.47.0
+Active account: 0xaf90801bb6606e52c7b2f664342c11b68b812ed1a01b5e742500cb28ed103b36
+[warning] Client/Server api version mismatch, client api version : 1.48.0, server api version : 1.47.0
+Using coin: 
+[warning] Client/Server api version mismatch, client api version : 1.48.0, server api version : 1.47.0
